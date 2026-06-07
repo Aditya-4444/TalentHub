@@ -47,18 +47,29 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel
 
-      # 1. Downloads the project linkage metadata from your account
+      # 1. Connects the pipeline runner to your online Vercel project metadata
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.TALENTHUBTOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
 
-      # 2. Compiles your project, explicitly passing your repository IDs 
-      # so Vercel can safely inject the Firebase secrets into your Vite build.
+      # 2. Compiles your code, injecting the environment variables directly into the Vite build engine
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.TALENTHUBTOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      # 3. Uploads the finalized, variable-injected build to live hosting
+      # 3. Uploads the variable-injected build files directly to live hosting
       - name: Deploy Project to Vercel Production
         run: vercel deploy --prebuilt --prod --token=${{ secrets.TALENTHUBTOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
