@@ -1,0 +1,115 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Install / Lint / Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint (if present)
+        run: npm run lint --if-present
+      - name: Run tests (if present)
+        run: npm test --if-present
+      - name: Build
+        run: npm run build --if-present
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  ai-code-review:
+    name: Optional AI code review
+    needs: test
+    runs-on: ubuntu-latest
+    if: secrets.OPENAI_API_KEY != ''
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect changed files
+        id: changed
+        run: |
+          git fetch --no-tags --prune --depth=1 origin ${{ github.ref }} || true
+          git --no-pager diff --name-only ${{ github.event.before }} ${{ github.sha }} | sed -n '1,200p' > changed.txt || true
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          cat changed.txt || true
+          echo "\nEOF" >> $GITHUB_OUTPUT
+      - name: Prepare prompt
+        id: prompt
+        run: |
+          echo "AI code reviewer — give short, actionable feedback on these changed files and highlight potential issues:" > prompt.txt
+          echo >> prompt.txt
+          cat changed.txt >> prompt.txt || true
+          echo "prompt<<EOF" >> $GITHUB_OUTPUT
+          cat prompt.txt || true
+          echo "\nEOF" >> $GITHUB_OUTPUT
+      - name: Call OpenAI (requires `OPENAI_API_KEY` secret)
+        id: openai_call
+        run: |
+          PROMPT=$(cat prompt.txt || echo "No changes detected")
+          RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @- <<'EOF'
+  {
+    "model": "gpt-4o-mini",
+    "messages": [{"role":"user","content": "${PROMPT//"/\"}"}],
+    "max_tokens": 800
+  }
+EOF
+          )
+          echo "$RESPONSE" > openai_response.json || true
+          # try to extract text safely
+          SUGGESTION=$(jq -r '.choices[0].message.content // "(no suggestion)"' openai_response.json 2>/dev/null || echo "(no suggestion)")
+          echo "suggestion<<EOF" >> $GITHUB_OUTPUT
+          echo "$SUGGESTION" >> $GITHUB_OUTPUT
+          echo "\nEOF" >> $GITHUB_OUTPUT
+      - name: Comment on PR with AI summary
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            **AI Code review**
+
+            ${{ steps.openai_call.outputs.suggestion }}
+
+  deploy:
+    name: Deploy to Vercel
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build --if-present
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./
+          prod: true

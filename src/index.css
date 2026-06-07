@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-page-bg: #F8FAFC;         /* Clean Slate 50 background */
+  --color-panel-bg: #F1F5F9;        /* Soft Slate 100 for sections/panels */
+  --color-card-surface: #FFFFFF;    /* Pure white cards */
+  --color-nav-bg: #FFFFFF;          /* Pure white navbar */
+  --color-primary-avocado: #059669;  /* Vibrant Emerald Green */
+  --color-primary-hover: #047857;    /* Deep Emerald Green for hover states */
+  --color-body-text: #0F172A;        /* Crisp Slate 900 for high readability text */
+  --color-muted-text: #475569;       /* Slate 600 for secondary description text */
+  --color-border-divider: #E2E8F0;   /* Clean Slate 200 border dividers */
+  
+  --color-badge-ft-bg: #ECFDF5;      /* Crisp mint green for full-time */
+  --color-badge-ft-text: #047857;
+  --color-badge-remote-bg: #FFFBEB;  /* Amber-orange for remote */
+  --color-badge-remote-text: #B45309;
+  --color-badge-pt-bg: #EFF6FF;      /* Blue for part-time */
+  --color-badge-pt-text: #1D4ED8;
+  --color-badge-contract-bg: #F8FAFC;/* Dark slate/gray for contract */
+  --color-badge-contract-text: #475569;
+  --color-badge-dept-bg: #F0FDF4;    /* Light green for departments */
+  --color-badge-dept-text: #15803D;
+  
+  --color-danger-reject: #EF4444;    /* Standard clean error red */
+  --color-toast-success-bg: #10B981;
+  
+  --color-gold: #F59E0B;             /* Amber gold accent */
+  --color-silver: #64748B;           /* Slate gray silver accent */
+  
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-serif: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-page-bg text-body-text font-sans antialiased;
+  }
+}
+
+/* Premium Gold Glow & Borders */
+.border-gold-glow {
+  border-color: #F59E0B !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gold-metallic {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+}
+
+/* Premium Silver Glow & Borders */
+.border-silver-glow {
+  border-color: #94A3B8 !important;
+  box-shadow: 0 0 12px rgba(148, 163, 184, 0.25);
+}
+
+.text-silver-gradient {
+  background: linear-gradient(135deg, #CBD5E1 0%, #64748B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-silver-metallic {
+  background: linear-gradient(135deg, #E2E8F0 0%, #94A3B8 100%);
+}
+
+/* Premium scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F8FAFC;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}
+
+/* Smooth transition defaults for all interactive items */
+a, button, input, select, textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@keyframes bounce-short {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-bounce-short {
+  animation: bounce-short 2s infinite ease-in-out;
+}
