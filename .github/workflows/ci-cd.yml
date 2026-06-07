@@ -44,8 +44,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Vercel CLI
-        run: npm install --global vercel
+      # FIX: Install project dependencies so Vite is available to run the build command
+      - name: Install Project Dependencies
+        run: npm ci
 
       # 1. We build locally on GitHub, manually passing the variables into the terminal shell
       - name: Build Production Assets
