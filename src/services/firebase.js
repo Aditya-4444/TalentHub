@@ -1,36 +1,21 @@
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  sendPasswordResetEmail,
-  updateProfile
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
   getDocs, 
   addDoc, 
-  setDoc,
-  doc, 
   query, 
   limit, 
-  serverTimestamp,
-  orderBy,
-  onSnapshot,
-  updateDoc,
-  deleteDoc,
-  where,
-  getDoc
+  serverTimestamp
 } from 'firebase/firestore';
 
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
 export const isFirebaseConfigured = !!apiKey && apiKey !== 'your_api_key' && apiKey !== '';
 
-let appInstance = null;
 let authInstance = null;
 let dbInstance = null;
 let googleProviderInstance = null;
@@ -45,7 +30,7 @@ if (isFirebaseConfigured) {
       messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
       appId: import.meta.env.VITE_FIREBASE_APP_ID
     };
-    appInstance = initializeApp(firebaseConfig);
+    const appInstance = initializeApp(firebaseConfig);
     authInstance = getAuth(appInstance);
     dbInstance = getFirestore(appInstance);
     googleProviderInstance = new GoogleAuthProvider();

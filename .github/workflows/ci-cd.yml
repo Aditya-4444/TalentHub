@@ -32,64 +32,6 @@ jobs:
           name: dist
           path: dist
 
-  ai-code-review:
-    name: Optional AI code review
-    needs: test
-    runs-on: ubuntu-latest
-    if: secrets.OPENAI_API_KEY != ''
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Collect changed files
-        id: changed
-        run: |
-          git fetch --no-tags --prune --depth=1 origin ${{ github.ref }} || true
-          git --no-pager diff --name-only ${{ github.event.before }} ${{ github.sha }} | sed -n '1,200p' > changed.txt || true
-          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-          cat changed.txt || true
-          echo "\nEOF" >> $GITHUB_OUTPUT
-      - name: Prepare prompt
-        id: prompt
-        run: |
-          echo "AI code reviewer — give short, actionable feedback on these changed files and highlight potential issues:" > prompt.txt
-          echo >> prompt.txt
-          cat changed.txt >> prompt.txt || true
-          echo "prompt<<EOF" >> $GITHUB_OUTPUT
-          cat prompt.txt || true
-          echo "\nEOF" >> $GITHUB_OUTPUT
-      - name: Call OpenAI (requires `OPENAI_API_KEY` secret)
-        id: openai_call
-        run: |
-          PROMPT=$(cat prompt.txt || echo "No changes detected")
-          RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
-            -H "Authorization: Bearer $OPENAI_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d @- <<'EOF'
-  {
-    "model": "gpt-4o-mini",
-    "messages": [{"role":"user","content": "${PROMPT//"/\"}"}],
-    "max_tokens": 800
-  }
-EOF
-          )
-          echo "$RESPONSE" > openai_response.json || true
-          # try to extract text safely
-          SUGGESTION=$(jq -r '.choices[0].message.content // "(no suggestion)"' openai_response.json 2>/dev/null || echo "(no suggestion)")
-          echo "suggestion<<EOF" >> $GITHUB_OUTPUT
-          echo "$SUGGESTION" >> $GITHUB_OUTPUT
-          echo "\nEOF" >> $GITHUB_OUTPUT
-      - name: Comment on PR with AI summary
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **AI Code review**
-
-            ${{ steps.openai_call.outputs.suggestion }}
-
   deploy:
     name: Deploy to Vercel
     needs: test

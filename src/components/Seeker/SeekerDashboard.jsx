@@ -136,7 +136,7 @@ export default function SeekerDashboard({
     const matchesType = activeTypes.length === 0 || activeTypes.includes(job.type);
 
     // 3. Department Match
-    let matchesDepartment = false;
+    let matchesDepartment;
     if (selectedDepartment !== 'All') {
       // Direct selected department match or mapping match
       matchesDepartment = (job.department === selectedDepartment) || 

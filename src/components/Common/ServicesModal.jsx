@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   X, Sparkles, FileText, Brain, TrendingUp, MessageSquare, Send, 
-  Plus, Trash2, Printer, Check, Briefcase, Award, User, Mail, 
-  Phone, ArrowRight, ShieldAlert, CheckCircle, RefreshCw, Cpu
+  Plus, Trash2, Printer, Check, Award, Mail, 
+  Phone, ArrowRight, ShieldAlert, CheckCircle, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../services/firebase';
-import { collection, addDoc, query, where, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 
 const RESUME_TEMPLATES = [
   { id: 'classic', label: 'Classic Corporate', desc: 'Elegant, traditional black & white layout for corporate roles.' },
@@ -181,12 +181,14 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
   const [interviewAnswers, setInterviewAnswers] = useState(['', '', '']);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [interviewReport, setInterviewReport] = useState(null);
+  const [interviewSessionId, setInterviewSessionId] = useState(null);
 
   const startInterview = () => {
     setInterviewAnswers(['', '', '']);
     setCurrentAnswer('');
     setInterviewStep(1);
     setInterviewReport(null);
+    setInterviewSessionId(Math.floor(1000 + Math.random() * 9000));
   };
 
   const submitAnswer = () => {
@@ -222,8 +224,6 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
     setTimeout(() => {
       setOptimizing(false);
       // Calculate scores dynamically based on actual overlapping words
-      const resumeWords = new Set(optimizerResume.toLowerCase().match(/\b\w+\b/g) || []);
-      const jdWords = optimizerJD.toLowerCase().match(/\b\w+\b/g) || [];
       
       // Keywords to check
       const keywordsToCheck = [
@@ -998,7 +998,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                       <div className="flex items-center justify-between border-b border-border-divider/30 pb-3">
                         <div className="space-y-0.5">
                           <h3 className="text-sm font-bold text-body-text">Mock Evaluation Report</h3>
-                          <p className="text-[10px] text-muted-text font-medium">Session code: #INT-{Math.floor(1000 + Math.random() * 9000)}</p>
+                          <p className="text-[10px] text-muted-text font-medium">Session code: #INT-{interviewSessionId || 1000}</p>
                         </div>
                         <div className="flex items-center gap-2.5">
                           {/* Score Badge */}
