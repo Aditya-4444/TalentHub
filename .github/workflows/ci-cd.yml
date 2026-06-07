@@ -23,7 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # continue-on-error ensures that strict ESLint issues won't crash your entire pipeline run
       - name: Lint (if present)
         run: npm run lint --if-present
         continue-on-error: true
@@ -51,14 +50,13 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel
 
-      # Pulls production settings directly from your dashboard account using your token
+      # FIX: Pulls the actual Firebase variables shown in your screenshot down into the build runner
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.TALENTHUBTOKEN }}
 
-      # Builds the production project assets inside the pipeline environment
+      # FIX: Injects those downloaded variables into your React/Vite production build bundle
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.TALENTHUBTOKEN }}
 
-      # Ships the pre-built ready assets directly out to Vercel's global network
       - name: Deploy Project to Vercel Production
         run: vercel deploy --prebuilt --prod --token=${{ secrets.TALENTHUBTOKEN }}
