@@ -62,17 +62,11 @@ jobs:
         id: openai_call
         run: |
           PROMPT=$(cat prompt.txt || echo "No changes detected")
+          JSON_BODY=$(jq -n --arg prompt "$PROMPT" '{model: "gpt-4o-mini", messages: [{role: "user", content: $prompt}], max_tokens: 800}')
           RESPONSE=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
-            -d @- <<'EOF'
-  {
-    "model": "gpt-4o-mini",
-    "messages": [{"role":"user","content": "${PROMPT//"/\"}"}],
-    "max_tokens": 800
-  }
-EOF
-          )
+            -d "$JSON_BODY")
           echo "$RESPONSE" > openai_response.json || true
           # try to extract text safely
           SUGGESTION=$(jq -r '.choices[0].message.content // "(no suggestion)"' openai_response.json 2>/dev/null || echo "(no suggestion)")
