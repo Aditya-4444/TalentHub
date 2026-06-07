@@ -170,70 +170,89 @@ export default function Navbar({
               )}
             </button>
 
-            {/* Notification Dropdown */}
+             {/* Notification Dropdown */}
             {notifDropdownOpen && (
-              <div className="absolute right-[-16px] sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-xs bg-white border border-border-divider rounded-2xl shadow-xl py-2 z-50 animate-scale-up max-h-[420px] flex flex-col">
-                <div className="px-4 py-2.5 border-b border-border-divider/40 flex items-center justify-between bg-panel-bg/20">
-                  <h3 className="text-xs font-bold text-body-text uppercase tracking-wider">Notifications</h3>
-                  {unreadCount > 0 && (
-                    <button 
-                      onClick={() => {
-                        onMarkAllAsRead();
-                      }}
-                      className="text-[10px] font-bold text-primary-avocado hover:text-primary-hover hover:underline bg-transparent"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
+              <>
+                {/* Mobile Notification Backdrop */}
+                <div 
+                  onClick={() => setNotifDropdownOpen(false)}
+                  className="fixed inset-0 bg-black/45 backdrop-blur-xs z-45 md:hidden animate-fade-in"
+                />
 
-                <div className="overflow-y-auto flex-1 divide-y divide-border-divider/20 scrollbar-thin max-h-[320px]">
-                  {notifications.length === 0 ? (
-                    <div className="py-8 px-4 text-center text-xs text-muted-text space-y-1">
-                      <p className="font-semibold text-body-text">All caught up! 🎉</p>
-                      <p className="text-[10px]">No new job openings or shortlists in the last 7 days.</p>
-                    </div>
-                  ) : (
-                    notifications.map((notif) => {
-                      const isUnread = !readNotificationIds.includes(notif.id);
-                      return (
-                        <div 
-                          key={notif.id}
+                <div className="fixed inset-x-0 bottom-0 top-auto md:absolute md:top-auto md:bottom-auto md:right-0 md:mt-2 w-full md:w-80 bg-white border-t md:border border-border-divider rounded-t-2xl md:rounded-2xl shadow-2xl md:shadow-xl py-2 z-50 animate-slide-up md:animate-scale-up max-h-[60vh] md:max-h-[420px] flex flex-col pb-6 md:pb-2">
+                  {/* Mobile drag handle indicator */}
+                  <div className="mx-auto w-12 h-1 bg-border-divider/50 rounded-full my-1.5 md:hidden" />
+
+                  <div className="px-4 py-2.5 border-b border-border-divider/40 flex items-center justify-between bg-panel-bg/20">
+                    <h3 className="text-xs font-bold text-body-text uppercase tracking-wider">Notifications</h3>
+                    <div className="flex items-center gap-3">
+                      {unreadCount > 0 && (
+                        <button 
                           onClick={() => {
-                            onNotificationClick(notif);
-                            setNotifDropdownOpen(false);
+                            onMarkAllAsRead();
                           }}
-                          className={`p-3.5 hover:bg-page-bg transition-colors cursor-pointer flex gap-3 text-left relative items-start ${
-                            isUnread ? 'bg-primary-avocado/5' : ''
-                          }`}
+                          className="text-[10px] font-bold text-primary-avocado hover:text-primary-hover hover:underline bg-transparent cursor-pointer"
                         >
-                          {/* Unread indicator dot */}
-                          {isUnread && (
-                            <span className="absolute top-4.5 left-2.5 w-1.5 h-1.5 bg-primary-avocado rounded-full" />
-                          )}
-                          
-                          <div className="flex-1 space-y-1 pl-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${
-                                notif.type === 'shortlist' 
-                                  ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' 
-                                  : 'bg-primary-avocado/10 text-primary-hover border border-primary-avocado/20'
-                              }`}>
-                                {notif.type === 'shortlist' ? 'Shortlist' : 'New Job'}
-                              </span>
-                              <span className="text-[9px] text-muted-text font-medium">
-                                {formatTimeAgo(notif.timestamp)}
-                              </span>
+                          Mark all as read
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setNotifDropdownOpen(false)}
+                        className="text-[10px] font-bold text-muted-text hover:text-body-text md:hidden px-1.5 py-0.5 rounded-lg hover:bg-page-bg transition-colors cursor-pointer"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 divide-y divide-border-divider/20 scrollbar-thin max-h-[320px] md:max-h-none">
+                    {notifications.length === 0 ? (
+                      <div className="py-8 px-4 text-center text-xs text-muted-text space-y-1">
+                        <p className="font-semibold text-body-text">All caught up! 🎉</p>
+                        <p className="text-[10px]">No new job openings or shortlists in the last 7 days.</p>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => {
+                        const isUnread = !readNotificationIds.includes(notif.id);
+                        return (
+                          <div 
+                            key={notif.id}
+                            onClick={() => {
+                              onNotificationClick(notif);
+                              setNotifDropdownOpen(false);
+                            }}
+                            className={`p-3.5 hover:bg-page-bg transition-colors cursor-pointer flex gap-3 text-left relative items-start ${
+                              isUnread ? 'bg-primary-avocado/5' : ''
+                            }`}
+                          >
+                            {/* Unread indicator dot */}
+                            {isUnread && (
+                              <span className="absolute top-4.5 left-2.5 w-1.5 h-1.5 bg-primary-avocado rounded-full" />
+                            )}
+                            
+                            <div className="flex-1 space-y-1 pl-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${
+                                  notif.type === 'shortlist' 
+                                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' 
+                                    : 'bg-primary-avocado/10 text-primary-hover border border-primary-avocado/20'
+                                }`}>
+                                  {notif.type === 'shortlist' ? 'Shortlist' : 'New Job'}
+                                </span>
+                                <span className="text-[9px] text-muted-text font-medium">
+                                  {formatTimeAgo(notif.timestamp)}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-body-text leading-snug">{notif.title}</p>
+                              <p className="text-[11px] text-muted-text font-medium leading-relaxed">{notif.message}</p>
                             </div>
-                            <p className="text-xs font-bold text-body-text leading-snug">{notif.title}</p>
-                            <p className="text-[11px] text-muted-text font-medium leading-relaxed">{notif.message}</p>
                           </div>
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         ) : (

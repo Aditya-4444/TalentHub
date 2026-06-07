@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Calendar, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Filter, Sparkles, Inbox, FileText } from 'lucide-react';
+import { Mail, Calendar, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Filter, Sparkles, Inbox, FileText, X, Phone, Printer } from 'lucide-react';
 import { db } from '../../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -10,6 +10,7 @@ export default function ProviderApplications({ jobs, applications, filterJobId, 
   };
   const [filterStatus, setFilterStatus] = useState('All');
   const [expandedAppId, setExpandedAppId] = useState(null);
+  const [selectedSyncedResume, setSelectedSyncedResume] = useState(null);
 
   const handleStatusUpdate = async (appId, currentStatus, newStatus) => {
     try {
@@ -265,20 +266,35 @@ export default function ProviderApplications({ jobs, applications, filterJobId, 
                         <h4 className="text-xs font-bold uppercase tracking-wider text-muted-text">Attached Resume</h4>
                         <div className="bg-white border border-border-divider/50 p-4 rounded-xl flex items-center justify-between shadow-2xs">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-2.5 bg-red-50 text-red-500 rounded-xl border border-red-100 shrink-0">
+                            <div className={`p-2.5 rounded-xl border shrink-0 ${
+                              app.resume.type === 'synced' 
+                                ? 'bg-primary-avocado/10 text-primary-hover border-primary-avocado/15' 
+                                : 'bg-red-50 text-red-500 border-red-100'
+                            }`}>
                               <FileText size={20} />
                             </div>
                             <div className="text-left min-w-0">
                               <p className="text-xs font-bold text-body-text truncate max-w-md">{app.resume.name}</p>
-                              <p className="text-[10px] text-muted-text font-medium">Click to view/download resume file</p>
+                              <p className="text-[10px] text-muted-text font-medium">
+                                {app.resume.type === 'synced' ? 'Built & Synced via TalentHub' : 'Attached document file'}
+                              </p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleViewResume(app.resume)}
-                            className="px-4 py-2 bg-primary-avocado hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                          >
-                            View Resume
-                          </button>
+                          {app.resume.type === 'synced' ? (
+                            <button
+                              onClick={() => setSelectedSyncedResume(app.resume.syncedDetails)}
+                              className="px-4 py-2 bg-primary-avocado hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                            >
+                              View Synced Resume
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleViewResume(app.resume)}
+                              className="px-4 py-2 bg-primary-avocado hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                            >
+                              View Resume
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -322,6 +338,171 @@ export default function ProviderApplications({ jobs, applications, filterJobId, 
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Synced Resume Viewer Modal */}
+      {selectedSyncedResume && (
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in print:bg-white print:p-0">
+          
+          {/* Main Card */}
+          <div className="relative w-full max-w-2xl bg-white border border-border-divider rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col justify-between animate-scale-up print:hidden">
+            
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-border-divider/50 flex items-center justify-between bg-panel-bg/40 shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-primary-avocado" />
+                <h3 className="text-sm font-bold text-body-text">Applicant Synced Resume Viewer</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedSyncedResume(null)}
+                className="p-1 text-muted-text hover:text-body-text rounded-full hover:bg-page-bg transition-colors"
+                aria-label="Close resume viewer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable content pane */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-zinc-100/35 flex justify-center min-h-0">
+              <div 
+                className={`w-full max-w-[520px] bg-white border border-zinc-200 shadow-md p-6 sm:p-8 text-left font-sans flex flex-col justify-between overflow-y-auto leading-normal ${
+                  selectedSyncedResume.template === 'avocado' ? 'border-t-8 border-t-primary-avocado' : 
+                  selectedSyncedResume.template === 'executive' ? 'border-l-8 border-l-stone-700' : ''
+                }`}
+              >
+                <div>
+                  {/* Name / Title */}
+                  <div className="space-y-1 pb-4.5 border-b border-zinc-200">
+                    <h1 className={`text-xl font-extrabold tracking-tight ${
+                      selectedSyncedResume.template === 'avocado' ? 'text-primary-hover' : 'text-zinc-800'
+                    }`}>
+                      {selectedSyncedResume.name || 'Candidate Name'}
+                    </h1>
+                    <p className={`text-xs font-bold ${
+                      selectedSyncedResume.template === 'avocado' ? 'text-primary-avocado' : 'text-zinc-650'
+                    }`}>
+                      {selectedSyncedResume.title || 'Professional Title'}
+                    </p>
+                    
+                    {/* Contact info */}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-500 font-semibold pt-1">
+                      {selectedSyncedResume.email && <span className="flex items-center gap-0.5"><Mail size={10} /> {selectedSyncedResume.email}</span>}
+                      {selectedSyncedResume.phone && <span className="flex items-center gap-0.5"><Phone size={10} /> {selectedSyncedResume.phone}</span>}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 space-y-4">
+                    {/* Summary */}
+                    {selectedSyncedResume.summary && (
+                      <div className="space-y-1">
+                        <h3 className={`text-[10px] font-bold uppercase tracking-wider ${
+                          selectedSyncedResume.template === 'avocado' ? 'text-primary-hover' : 'text-zinc-855'
+                        }`}>
+                          Professional Summary
+                        </h3>
+                        <p className="text-[10px] text-zinc-650 leading-relaxed font-medium">
+                          {selectedSyncedResume.summary}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Skills */}
+                    {selectedSyncedResume.skills && (
+                      <div className="space-y-1.5">
+                        <h3 className={`text-[10px] font-bold uppercase tracking-wider ${
+                          selectedSyncedResume.template === 'avocado' ? 'text-primary-hover' : 'text-zinc-855'
+                        }`}>
+                          Core Skills
+                        </h3>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedSyncedResume.skills.split(',').map((skill, idx) => (
+                            <span key={idx} className={`text-[9px] font-bold px-2 py-0.5 rounded ${
+                              selectedSyncedResume.template === 'avocado' 
+                                ? 'bg-primary-avocado/10 text-primary-hover' 
+                                : 'bg-zinc-100 text-zinc-700'
+                            }`}>
+                              {skill.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Experience */}
+                    {selectedSyncedResume.experience && selectedSyncedResume.experience.length > 0 && (
+                      <div className="space-y-2">
+                        <h3 className={`text-[10px] font-bold uppercase tracking-wider ${
+                          selectedSyncedResume.template === 'avocado' ? 'text-primary-hover' : 'text-zinc-855'
+                        }`}>
+                          Professional Experience
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedSyncedResume.experience.map((exp, idx) => (
+                            <div key={idx} className="space-y-0.5">
+                              <div className="flex justify-between items-baseline">
+                                <span className="text-[10px] font-bold text-zinc-800">{exp.role || 'Role'}</span>
+                                <span className="text-[9px] text-zinc-500 font-semibold">{exp.duration}</span>
+                              </div>
+                              <div className="text-[9px] font-bold text-zinc-650">{exp.company || 'Company'}</div>
+                              <p className="text-[9px] text-zinc-500 leading-relaxed font-medium">{exp.desc}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Education */}
+                    {selectedSyncedResume.education && selectedSyncedResume.education.length > 0 && (
+                      <div className="space-y-2">
+                        <h3 className={`text-[10px] font-bold uppercase tracking-wider ${
+                          selectedSyncedResume.template === 'avocado' ? 'text-primary-hover' : 'text-zinc-855'
+                        }`}>
+                          Education
+                        </h3>
+                        <div className="space-y-2">
+                          {selectedSyncedResume.education.map((edu, idx) => (
+                            <div key={idx} className="flex justify-between items-start">
+                              <div className="text-[9px]">
+                                <span className="font-bold text-zinc-800">{edu.degree || 'Degree'}</span>
+                                <span className="text-zinc-400 mx-1">•</span>
+                                <span className="text-zinc-600 font-semibold">{edu.school || 'School'}</span>
+                              </div>
+                              <span className="text-[9px] text-zinc-500 font-semibold">{edu.year}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
+                {/* Stamp */}
+                <div className="text-[8px] text-center text-zinc-400 mt-6 pt-2 border-t border-zinc-100 flex items-center justify-between shrink-0 font-medium">
+                  <span>TalentHub Synced Resume Submission</span>
+                  <span>{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="px-6 py-4.5 border-t border-border-divider/40 bg-panel-bg/25 flex justify-end gap-2.5 shrink-0">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 border border-border-divider hover:bg-white text-xs font-bold rounded-xl text-body-text transition-colors flex items-center gap-1 cursor-pointer shadow-3xs"
+              >
+                <Printer size={13} /> Export/Print
+              </button>
+              <button
+                onClick={() => setSelectedSyncedResume(null)}
+                className="px-5 py-2 bg-primary-avocado hover:bg-primary-hover text-xs font-bold rounded-xl text-white transition-colors cursor-pointer"
+              >
+                Close Viewer
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
     </div>

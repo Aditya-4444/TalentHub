@@ -99,6 +99,9 @@ export default function ServicesModal({ isOpen, onClose }) {
     if (userData && isOpen) {
       if (userData.savedResumeDetails) {
         setResumeData(userData.savedResumeDetails);
+        if (userData.savedResumeDetails.template) {
+          setResumeTemplate(userData.savedResumeDetails.template);
+        }
       } else {
         setResumeData(prev => ({
           ...prev,
@@ -168,7 +171,10 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
         bio: resumeData.summary,
         phone: resumeData.phone,
         // Save the raw details as a resume object
-        savedResumeDetails: resumeData,
+        savedResumeDetails: {
+          ...resumeData,
+          template: resumeTemplate
+        },
         // Also save formatted text resume so they can directly use it
         defaultResumeText: resumeFormattedText
       });
@@ -410,14 +416,14 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
       <div className="relative w-full max-w-6xl bg-white border border-border-divider rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden h-[95vh] sm:h-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col justify-between animate-scale-up print:hidden">
         
         {/* Header */}
-        <div className="px-6 py-4.5 border-b border-border-divider/50 flex items-center justify-between bg-panel-bg/40 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <Sparkles size={20} className="text-primary-avocado fill-primary-avocado/15 animate-pulse" />
-            <h2 className="text-lg font-bold font-serif text-body-text">TalentHub Services & Career Tools</h2>
+        <div className="px-4 sm:px-6 py-3 sm:py-4.5 border-b border-border-divider/50 flex items-center justify-between bg-panel-bg/40 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <Sparkles className="text-primary-avocado fill-primary-avocado/15 animate-pulse shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
+            <h2 className="text-sm sm:text-lg font-bold font-serif text-body-text truncate">TalentHub Services & Career Tools</h2>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 text-muted-text hover:text-body-text rounded-full hover:bg-page-bg transition-colors"
+            className="p-1 text-muted-text hover:text-body-text rounded-full hover:bg-page-bg transition-colors shrink-0"
             aria-label="Close modal"
           >
             <X size={20} />
@@ -519,31 +525,34 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
               
               {/* TAB 1: RESUME BUILDER */}
               {activeService === 'resume' && (
-                <div className="flex flex-col lg:flex-row gap-6 h-full items-stretch">
-                  
-                  {/* Left Column: Input Panel */}
-                  <div className="w-full lg:w-1/2 space-y-6 lg:overflow-y-auto lg:pr-2 scrollbar-thin">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-divider/40 pb-3.5 text-left w-full">
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-bold text-body-text">Resume Details</h3>
-                        <p className="text-[11px] text-muted-text">Fill in your information to compile a formatted modern resume.</p>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <button
-                          onClick={handleSaveResumeToProfile}
-                          disabled={savingResume}
-                          className="px-3 py-1.5 bg-primary-avocado hover:bg-primary-hover text-white text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs hover:shadow-xs cursor-pointer"
-                        >
-                          <Check size={12} /> {savingResume ? 'Saving...' : 'Save & Sync'}
-                        </button>
-                        <button
-                          onClick={handlePrintResume}
-                          className="px-3 py-1.5 border border-border-divider hover:bg-white text-body-text text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-3xs cursor-pointer"
-                        >
-                          <Printer size={12} /> Export/Print
-                        </button>
-                      </div>
+                <div className="flex flex-col h-full space-y-4 min-h-0">
+                  {/* Sticky Header with Action Buttons */}
+                  <div className="sticky top-0 z-20 bg-white border-b border-border-divider/40 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left w-full shrink-0">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-bold text-body-text">Resume Details & Sync</h3>
+                      <p className="text-[11px] text-muted-text font-medium">Fill in your information to compile a formatted modern resume and sync it to your profile for applications.</p>
                     </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={handleSaveResumeToProfile}
+                        disabled={savingResume}
+                        className="px-3 py-1.5 bg-primary-avocado hover:bg-primary-hover text-white text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs hover:shadow-xs cursor-pointer"
+                      >
+                        <Check size={12} /> {savingResume ? 'Saving...' : 'Save & Sync'}
+                      </button>
+                      <button
+                        onClick={handlePrintResume}
+                        className="px-3 py-1.5 border border-border-divider hover:bg-white text-body-text text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-3xs cursor-pointer"
+                      >
+                        <Printer size={12} /> Export/Print
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Split Pane Layout */}
+                  <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-y-auto lg:overflow-hidden min-h-0 items-stretch">
+                    {/* Left Column: Input Panel */}
+                    <div className="w-full lg:w-1/2 space-y-6 lg:overflow-y-auto lg:pr-2 scrollbar-thin text-left pb-6 lg:pb-0">
 
                     {/* Template Selection */}
                     <div className="space-y-2.5 text-left bg-panel-bg/15 p-4 rounded-2xl border border-border-divider/40">
@@ -879,6 +888,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
 
                   </div>
                 </div>
+              </div>
               )}
 
               {/* TAB 2: AI MOCK INTERVIEW */}

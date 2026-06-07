@@ -12,6 +12,9 @@ export default function ApplicationModal({ isOpen, onClose, job, onApplySuccess 
   const [error, setError] = useState('');
   const [displayName, setDisplayName] = useState('');
   
+  // Resume Source Selection State
+  const [resumeSource, setResumeSource] = useState('upload'); // 'synced' | 'upload'
+  
   // Resume File Attachment State
   const [resumeFile, setResumeFile] = useState(null);
 
@@ -20,10 +23,15 @@ export default function ApplicationModal({ isOpen, onClose, job, onApplySuccess 
   const [aiResult, setAiResult] = useState('');
   const [aiTyping, setAiTyping] = useState(false);
 
-  // Pre-fill name from profile
+  // Pre-fill name and determine initial resume source
   useEffect(() => {
-    if (userData) {
+    if (userData && isOpen) {
       setDisplayName(userData.displayName || '');
+      if (userData.savedResumeDetails) {
+        setResumeSource('synced');
+      } else {
+        setResumeSource('upload');
+      }
     }
   }, [userData, isOpen]);
 
@@ -82,6 +90,14 @@ export default function ApplicationModal({ isOpen, onClose, job, onApplySuccess 
       setError('Please provide your name.');
       return;
     }
+    if (resumeSource === 'upload' && !resumeFile) {
+      setError('Please upload a resume file.');
+      return;
+    }
+    if (resumeSource === 'synced' && (!userData || !userData.savedResumeDetails)) {
+      setError('No synced resume found. Please build one in Career Services first or upload a file.');
+      return;
+    }
     if (!coverNote) {
       setError('Please write a short cover note for the hiring team.');
       return;
@@ -91,6 +107,13 @@ export default function ApplicationModal({ isOpen, onClose, job, onApplySuccess 
     setError('');
 
     try {
+      const selectedResume = resumeSource === 'synced' ? {
+        type: 'synced',
+        name: `${userData.savedResumeDetails.name || userData.displayName || 'Built'}_Resume.pdf`,
+        syncedDetails: userData.savedResumeDetails,
+        defaultResumeText: userData.defaultResumeText || ''
+      } : resumeFile;
+
       // Create application document in Firestore
       await addDoc(collection(db, 'applications'), {
         jobId: job.id,
@@ -100,7 +123,7 @@ export default function ApplicationModal({ isOpen, onClose, job, onApplySuccess 
         seekerName: displayName,
         seekerEmail: currentUser.email,
         coverNote,
-        resume: resumeFile || null, // Attached base64 resume structure
+        resume: selectedResume,
         appliedAt: serverTimestamp(),
         status: 'Pending',
         providerId: job.providerId // We carry providerId for optimized querying
@@ -210,49 +233,118 @@ export default function ApplicationModal({ isOpen, onClose, job, onApplySuccess 
               </div>
             </div>
 
-            {/* Resume Upload Box */}
-            <div className="space-y-2 text-left">
-              <label className="block text-xs font-semibold text-muted-text flex items-center justify-between">
-                <span>Upload Resume (.pdf, .doc, .docx)</span>
-                <span className="text-[10px] text-primary-avocado/80 font-normal">Max 1MB</span>
-              </label>
-              
-              {resumeFile ? (
-                <div className="bg-primary-avocado/5 border border-primary-avocado/20 rounded-xl p-3.5 flex items-center justify-between shadow-2xs animate-fade-in">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-2 bg-primary-avocado/10 rounded-lg text-primary-hover shrink-0">
-                      <FileText size={16} />
+            {/* Resume Selection / Upload Box */}
+            <div className="space-y-3.5 text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-divider/30 pb-2">
+                <span className="text-xs font-bold text-body-text uppercase tracking-wider">Select Resume Submission</span>
+                {userData?.savedResumeDetails && (
+                  <div className="flex gap-1.5 bg-page-bg/85 p-1 rounded-xl border border-border-divider/50 self-start sm:self-auto shrink-0 select-none">
+                    <button
+                      type="button"
+                      onClick={() => setResumeSource('synced')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        resumeSource === 'synced'
+                          ? 'bg-white text-primary-hover shadow-3xs border border-border-divider/50'
+                          : 'text-muted-text hover:text-body-text'
+                      }`}
+                    >
+                      Use Built Resume
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setResumeSource('upload')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        resumeSource === 'upload'
+                          ? 'bg-white text-primary-hover shadow-3xs border border-border-divider/50'
+                          : 'text-muted-text hover:text-body-text'
+                      }`}
+                    >
+                      Upload File
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {resumeSource === 'synced' && userData?.savedResumeDetails ? (
+                /* Synced built resume info card */
+                <div className="bg-primary-avocado/5 border border-primary-avocado/25 rounded-2xl p-4 text-left space-y-3 shadow-3xs animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[9.5px] font-bold bg-badge-dept-bg text-badge-dept-text border border-primary-avocado/20">
+                      <Sparkles size={11} className="fill-primary-avocado/30 shrink-0" />
+                      TalentHub Synced Resume Active
+                    </span>
+                    <span className="text-[10px] text-muted-text font-bold capitalize">
+                      Template: {userData.savedResumeDetails.template || 'Classic'}
+                    </span>
+                  </div>
+                  
+                  <div className="border-t border-border-divider/25 pt-2.5 flex items-start gap-3">
+                    <div className="p-2.5 bg-primary-avocado/10 text-primary-hover rounded-xl border border-primary-avocado/15 shrink-0">
+                      <FileText size={20} />
                     </div>
-                    <div className="text-left min-w-0">
-                      <p className="text-xs font-bold text-body-text truncate max-w-xs">{resumeFile.name}</p>
-                      <p className="text-[9px] text-muted-text">Resume file attached</p>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs font-bold text-body-text">{userData.savedResumeDetails.name || userData.displayName}</h4>
+                      <p className="text-[10px] font-semibold text-primary-avocado truncate mt-0.5">{userData.savedResumeDetails.title || 'Professional Title'}</p>
+                      
+                      <div className="flex gap-3 text-[9.5px] text-muted-text mt-1.5 font-medium">
+                        <span>{userData.savedResumeDetails.experience?.length || 0} Work History items</span>
+                        <span>•</span>
+                        <span>{userData.savedResumeDetails.education?.length || 0} Education items</span>
+                      </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setResumeFile(null)}
-                    className="p-1 text-danger-reject hover:bg-red-50 rounded-lg transition-colors text-xs font-semibold cursor-pointer shrink-0"
-                  >
-                    Remove
-                  </button>
+                  
+                  <p className="text-[10px] text-muted-text leading-snug border-t border-border-divider/25 pt-2 font-medium">
+                    Your synced built resume will be sent directly to the hiring team. Update it anytime in Services.
+                  </p>
                 </div>
               ) : (
-                <div className="relative group border border-dashed border-border-divider/80 hover:border-primary-avocado/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-panel-bg/10 hover:bg-primary-avocado/5 animate-fade-in">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  />
-                  <div className="space-y-1">
-                    <div className="mx-auto w-8 h-8 rounded-full bg-border-divider/30 text-muted-text flex items-center justify-center group-hover:text-primary-avocado group-hover:bg-primary-avocado/10 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4.5 h-4.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                      </svg>
+                /* Standard Upload Selector */
+                <div className="space-y-2.5">
+                  {!userData?.savedResumeDetails && (
+                    <div className="text-[10.5px] font-semibold text-muted-text bg-panel-bg/45 border border-border-divider/30 p-2.5 rounded-xl flex items-center justify-between">
+                      <span>💡 Pro-tip: Build and sync your resume in Services to apply instantly with one click next time!</span>
                     </div>
-                    <p className="text-xs font-bold text-body-text">Drag and drop or click to upload</p>
-                    <p className="text-[9px] text-muted-text">Supported formats: PDF, DOC, DOCX up to 1MB</p>
-                  </div>
+                  )}
+
+                  {resumeFile ? (
+                    <div className="bg-primary-avocado/5 border border-primary-avocado/20 rounded-xl p-3.5 flex items-center justify-between shadow-2xs animate-fade-in">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="p-2 bg-primary-avocado/10 rounded-lg text-primary-hover shrink-0">
+                          <FileText size={16} />
+                        </div>
+                        <div className="text-left min-w-0">
+                          <p className="text-xs font-bold text-body-text truncate max-w-xs">{resumeFile.name}</p>
+                          <p className="text-[9px] text-muted-text">Resume file attached</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setResumeFile(null)}
+                        className="p-1 text-danger-reject hover:bg-red-50 rounded-lg transition-colors text-xs font-semibold cursor-pointer shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative group border border-dashed border-border-divider/80 hover:border-primary-avocado/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-panel-bg/10 hover:bg-primary-avocado/5 animate-fade-in">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="space-y-1">
+                        <div className="mx-auto w-8 h-8 rounded-full bg-border-divider/30 text-muted-text flex items-center justify-center group-hover:text-primary-avocado group-hover:bg-primary-avocado/10 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4.5 h-4.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                          </svg>
+                        </div>
+                        <p className="text-xs font-bold text-body-text">Drag and drop or click to upload</p>
+                        <p className="text-[9px] text-muted-text">Supported formats: PDF, DOC, DOCX up to 1MB</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
