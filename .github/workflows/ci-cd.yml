@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Install / Lint / Build
+    name: Install / Lint / Verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,9 +31,6 @@ jobs:
         run: npm test --if-present
         continue-on-error: true
 
-      - name: Build Verification
-        run: npm run build --if-present
-
   deploy:
     name: Deploy to Vercel
     needs: test
@@ -50,13 +47,14 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel
 
-      # FIX: Pulls the actual Firebase variables shown in your screenshot down into the build runner
+      # 1. Pulls down the environment variables from your Vercel Dashboard dashboard
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.TALENTHUBTOKEN }}
 
-      # FIX: Injects those downloaded variables into your React/Vite production build bundle
+      # 2. Compiles your code with full access to those freshly pulled keys
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.TALENTHUBTOKEN }}
 
+      # 3. Ships the correct asset payload out to the live server
       - name: Deploy Project to Vercel Production
         run: vercel deploy --prebuilt --prod --token=${{ secrets.TALENTHUBTOKEN }}
