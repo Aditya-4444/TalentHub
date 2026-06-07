@@ -386,7 +386,7 @@ export default function App() {
       />
 
       {/* Role-based Dashboard Gating */}
-      <div className="flex-1">
+      <div className={`flex-1 ${userData?.role === 'seeker' ? 'pb-16 md:pb-0' : ''}`}>
         {userData.role === 'provider' ? (
           <ProviderDashboard triggerToast={triggerToast} />
         ) : (

@@ -67,7 +67,8 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-border-divider shadow-xs h-16 flex items-center justify-between px-6">
+    <>
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-border-divider shadow-xs h-16 flex items-center justify-between px-6">
       
       {/* Left: Brand Logo & Navigation Tabs */}
       <div className="flex items-center gap-6 select-none">
@@ -133,9 +134,10 @@ export default function Navbar({
           <button 
             onClick={onOpenProfile}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 text-yellow-800 text-xs font-bold rounded-xl shadow-2xs hover:shadow-xs transition-all animate-bounce-short cursor-pointer"
+            title="Upgrade Plan"
           >
             <Sparkles size={13} className="fill-yellow-500 text-yellow-600" />
-            Upgrade Plan
+            <span className="hidden sm:inline">Upgrade Plan</span>
           </button>
         )}
 
@@ -144,9 +146,10 @@ export default function Navbar({
           <button 
             onClick={onOpenServices}
             className="flex items-center gap-1.5 px-3 py-1.5 border border-primary-avocado/30 hover:bg-primary-avocado/5 text-xs font-bold text-body-text rounded-xl transition-all shadow-3xs hover:shadow-2xs cursor-pointer"
+            title="Career Services"
           >
             <Sparkles size={13} className="text-primary-avocado fill-primary-avocado/20 animate-pulse" />
-            Services
+            <span className="hidden sm:inline">Services</span>
           </button>
         )}
 
@@ -169,7 +172,7 @@ export default function Navbar({
 
             {/* Notification Dropdown */}
             {notifDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-border-divider rounded-2xl shadow-xl py-2 z-50 animate-scale-up max-h-[420px] flex flex-col">
+              <div className="absolute right-[-16px] sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-xs bg-white border border-border-divider rounded-2xl shadow-xl py-2 z-50 animate-scale-up max-h-[420px] flex flex-col">
                 <div className="px-4 py-2.5 border-b border-border-divider/40 flex items-center justify-between bg-panel-bg/20">
                   <h3 className="text-xs font-bold text-body-text uppercase tracking-wider">Notifications</h3>
                   {unreadCount > 0 && (
@@ -358,5 +361,42 @@ export default function Navbar({
       </div>
 
     </header>
-  );
+
+    {/* Bottom Navigation Bar for Mobile Seekers */}
+    {userData?.role === 'seeker' && activeTab && (
+      <nav className="fixed bottom-0 left-0 right-0 z-45 bg-white/95 backdrop-blur-md border-t border-border-divider flex items-center justify-around h-16 px-4 md:hidden shadow-lg select-none">
+        <button
+          onClick={() => setActiveTab('find-jobs')}
+          className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 cursor-pointer transition-all ${
+            activeTab === 'find-jobs' ? 'text-primary-hover font-bold scale-105' : 'text-muted-text'
+          }`}
+        >
+          <Briefcase size={20} className={activeTab === 'find-jobs' ? 'text-primary-hover fill-primary-hover/10' : ''} />
+          <span className="text-[10px]">Explore</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('my-applications')}
+          className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 cursor-pointer transition-all relative ${
+            activeTab === 'my-applications' ? 'text-primary-hover font-bold scale-105' : 'text-muted-text'
+          }`}
+        >
+          <FileText size={20} className={activeTab === 'my-applications' ? 'text-primary-hover fill-primary-hover/10' : ''} />
+          <span className="text-[10px]">Applications</span>
+          {applicationsCount > 0 && (
+            <span className="absolute top-1.5 right-1/3 translate-x-3 bg-primary-avocado text-white text-[8px] font-bold px-1 rounded-full min-w-3.5 h-3.5 flex items-center justify-center border border-white">
+              {applicationsCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={onOpenServices}
+          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 cursor-pointer text-muted-text hover:text-body-text transition-all"
+        >
+          <Sparkles size={20} className="text-primary-avocado fill-primary-avocado/15 animate-pulse" />
+          <span className="text-[10px] text-body-text font-medium">Services</span>
+        </button>
+      </nav>
+    )}
+  </>
+);
 }

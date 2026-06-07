@@ -361,7 +361,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in print:bg-white print:p-0">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/45 backdrop-blur-sm animate-fade-in print:bg-white print:p-0">
       
       {/* Dynamic inline print styles */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -396,7 +396,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
       `}} />
 
       {/* Main Modal Card */}
-      <div className="relative w-full max-w-6xl bg-white border border-border-divider rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col justify-between animate-scale-up print:hidden">
+      <div className="relative w-full max-w-6xl bg-white border border-border-divider rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden h-[95vh] sm:h-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col justify-between animate-scale-up print:hidden">
         
         {/* Header */}
         <div className="px-6 py-4.5 border-b border-border-divider/50 flex items-center justify-between bg-panel-bg/40 shrink-0">
@@ -504,14 +504,14 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
             </div>
 
             {/* Service View Selector */}
-            <div className="flex-1 overflow-y-auto p-6 min-h-0">
+            <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 min-h-0">
               
               {/* TAB 1: RESUME BUILDER */}
               {activeService === 'resume' && (
                 <div className="flex flex-col lg:flex-row gap-6 h-full items-stretch">
                   
                   {/* Left Column: Input Panel */}
-                  <div className="w-full lg:w-1/2 space-y-6 overflow-y-auto lg:pr-2 scrollbar-thin">
+                  <div className="w-full lg:w-1/2 space-y-6 lg:overflow-y-auto lg:pr-2 scrollbar-thin">
                     <div className="space-y-1 text-left">
                       <h3 className="text-sm font-bold text-body-text">Resume Details</h3>
                       <p className="text-[11px] text-muted-text">Fill in your information to compile a formatted modern resume.</p>
@@ -623,7 +623,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                           >
                             <Trash2 size={12} />
                           </button>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-1">
                               <label className="text-[9px] font-bold text-muted-text">Job Role / Title</label>
                               <input 
@@ -643,8 +643,8 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                               />
                             </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="col-span-1 space-y-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="sm:col-span-1 space-y-1">
                               <label className="text-[9px] font-bold text-muted-text">Duration (e.g. 2021-2023)</label>
                               <input 
                                 type="text" 
@@ -653,7 +653,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                                 className="w-full text-[11px] px-2.5 py-1.5 border border-border-divider focus:border-primary-avocado outline-none rounded-lg bg-white"
                               />
                             </div>
-                            <div className="col-span-2 space-y-1">
+                            <div className="sm:col-span-2 space-y-1">
                               <label className="text-[9px] font-bold text-muted-text">Key Contributions</label>
                               <input 
                                 type="text" 
@@ -687,7 +687,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                           >
                             <Trash2 size={12} />
                           </button>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div className="space-y-1">
                               <label className="text-[9px] font-bold text-muted-text">Degree</label>
                               <input 
@@ -744,7 +744,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                     </div>
 
                     {/* Printable Target Resume Sheet */}
-                    <div className="flex-1 overflow-y-auto py-6 flex justify-center bg-zinc-100/40 rounded-xl mt-3">
+                    <div className="flex-1 lg:overflow-y-auto py-6 flex justify-center bg-zinc-100/40 rounded-xl mt-3">
                       <div 
                         id="resume-print-target"
                         className={`w-full max-w-[550px] aspect-[1/1.41] bg-white border border-zinc-200/80 shadow-md p-7 text-left font-sans flex flex-col justify-between overflow-y-auto leading-normal ${
@@ -889,7 +889,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                     <div className="bg-white border border-border-divider/60 rounded-2xl p-6 space-y-5 shadow-2xs">
                       <h3 className="text-sm font-bold text-body-text">Configure Mock Session</h3>
                       
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-muted-text uppercase">Target Job Field</label>
                           <select
@@ -1229,8 +1229,8 @@ Summary: ${resumeData.summary}
                     <form onSubmit={handleSubmitTicket} className="space-y-4 bg-white border border-border-divider/60 rounded-2xl p-6 shadow-2xs">
                       <h3 className="text-sm font-bold text-body-text">Open Support Ticket</h3>
 
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-1 space-y-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-1 space-y-1">
                           <label className="text-[10px] font-bold text-muted-text">Category</label>
                           <select
                             value={supportCategory}
@@ -1244,7 +1244,7 @@ Summary: ${resumeData.summary}
                           </select>
                         </div>
 
-                        <div className="col-span-2 space-y-1">
+                        <div className="sm:col-span-2 space-y-1">
                           <label className="text-[10px] font-bold text-muted-text">Subject Headline</label>
                           <input
                             type="text"
