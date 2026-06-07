@@ -74,7 +74,7 @@ const MOCK_INTERVIEW_EVALUATION = {
 };
 
 export default function ServicesModal({ isOpen, onClose }) {
-  const { currentUser, userData, updateProfileDocument } = useAuth();
+  const { currentUser, userData, updateProfileData } = useAuth();
   const [activeService, setActiveService] = useState('resume'); // 'resume' | 'interview' | 'optimizer' | 'support'
   
   // RESUME BUILDER STATE
@@ -94,15 +94,25 @@ export default function ServicesModal({ isOpen, onClose }) {
     ]
   });
 
-  // Sync current auth profile name & email if blank
+  // Sync current auth profile name & email if blank, and load savedResumeDetails if present!
   useEffect(() => {
     if (userData && isOpen) {
-      setResumeData(prev => ({
-        ...prev,
-        name: prev.name || userData.displayName || '',
-        email: prev.email || userData.email || '',
-        phone: prev.phone || userData.phone || ''
-      }));
+      if (userData.savedResumeDetails) {
+        setResumeData(userData.savedResumeDetails);
+      } else {
+        setResumeData(prev => ({
+          ...prev,
+          name: prev.name || userData.displayName || '',
+          email: prev.email || userData.email || '',
+          phone: prev.phone || userData.phone || '',
+          experience: prev.experience.length ? prev.experience : [
+            { role: 'Software Engineer', company: 'Innovation Labs', duration: '2023 - Present', desc: 'Designed modern responsive dashboards and led API integration teams.' }
+          ],
+          education: prev.education.length ? prev.education : [
+            { degree: 'B.S. Computer Science', school: 'Tech State University', year: '2022' }
+          ]
+        }));
+      }
     }
   }, [userData, isOpen]);
 
@@ -136,7 +146,7 @@ export default function ServicesModal({ isOpen, onClose }) {
   const handleSaveResumeToProfile = async () => {
     setSavingResume(true);
     try {
-      // Simulate build PDF representation or store structured data in user profile
+      // Build formatted text representation of the resume
       const resumeFormattedText = `
 ${resumeData.name} | ${resumeData.title}
 Email: ${resumeData.email} | Phone: ${resumeData.phone}
@@ -151,7 +161,8 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
       `;
 
       // Save structured resume to user profile in Firestore
-      await updateProfileDocument({
+      await updateProfileData({
+        displayName: resumeData.name || userData?.displayName || '',
         skills: resumeData.skills.split(',').map(s => s.trim()).filter(Boolean),
         headline: resumeData.title,
         bio: resumeData.summary,
@@ -162,7 +173,7 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
         defaultResumeText: resumeFormattedText
       });
       
-      alert("Success! Your profile and built resume have been synchronized. You can now use this information when applying.");
+      alert("Success! Your profile and built resume have been saved and synchronized. You can now use this information when applying.");
     } catch (err) {
       console.error(err);
       alert("Failed to sync resume to profile.");
@@ -512,9 +523,26 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                   
                   {/* Left Column: Input Panel */}
                   <div className="w-full lg:w-1/2 space-y-6 lg:overflow-y-auto lg:pr-2 scrollbar-thin">
-                    <div className="space-y-1 text-left">
-                      <h3 className="text-sm font-bold text-body-text">Resume Details</h3>
-                      <p className="text-[11px] text-muted-text">Fill in your information to compile a formatted modern resume.</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-divider/40 pb-3.5 text-left w-full">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-bold text-body-text">Resume Details</h3>
+                        <p className="text-[11px] text-muted-text">Fill in your information to compile a formatted modern resume.</p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={handleSaveResumeToProfile}
+                          disabled={savingResume}
+                          className="px-3 py-1.5 bg-primary-avocado hover:bg-primary-hover text-white text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs hover:shadow-xs cursor-pointer"
+                        >
+                          <Check size={12} /> {savingResume ? 'Saving...' : 'Save & Sync'}
+                        </button>
+                        <button
+                          onClick={handlePrintResume}
+                          className="px-3 py-1.5 border border-border-divider hover:bg-white text-body-text text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-3xs cursor-pointer"
+                        >
+                          <Printer size={12} /> Export/Print
+                        </button>
+                      </div>
                     </div>
 
                     {/* Template Selection */}
@@ -722,25 +750,9 @@ ${resumeData.education.map(edu => `- ${edu.degree}, ${edu.school} (${edu.year})`
                   </div>
 
                   {/* Right Column: Live Premium Preview */}
-                  <div className="w-full lg:w-1/2 flex flex-col overflow-hidden bg-panel-bg/25 border border-border-divider/60 rounded-2xl p-4">
+                  <div className="w-full lg:w-1/2 flex flex-col lg:overflow-hidden bg-panel-bg/25 border border-border-divider/60 rounded-2xl p-4">
                     <div className="flex items-center justify-between pb-3 border-b border-border-divider/40 shrink-0">
                       <span className="text-xs font-bold text-body-text">Resume Preview</span>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveResumeToProfile}
-                          disabled={savingResume}
-                          className="px-3 py-1.5 bg-primary-avocado hover:bg-primary-hover text-white text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs hover:shadow-xs cursor-pointer"
-                        >
-                          <Check size={12} /> {savingResume ? 'Syncing...' : 'Sync to Profile'}
-                        </button>
-                        <button
-                          onClick={handlePrintResume}
-                          className="px-3 py-1.5 border border-border-divider hover:bg-white text-body-text text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-3xs cursor-pointer"
-                        >
-                          <Printer size={12} /> Export/Print
-                        </button>
-                      </div>
                     </div>
 
                     {/* Printable Target Resume Sheet */}
